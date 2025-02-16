@@ -1,2 +1,7 @@
-flask
 python-dotenv
+sqlalchemy
+flask
+flask-sqlalchemy
+flask-migrate
+flask-login
+argon2-cffi
