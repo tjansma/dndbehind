@@ -1,3 +1,5 @@
+"""Database models for the D&D Behind application."""
+
 from datetime import datetime
 from typing import Optional
 
@@ -11,6 +13,7 @@ from . import db
 
 
 class User(UserMixin, db.Model):
+    """User model for the application."""
     id: orm.Mapped[int] = orm.mapped_column(
         primary_key=True)
     username: orm.Mapped[str] = orm.mapped_column(
@@ -29,14 +32,32 @@ class User(UserMixin, db.Model):
         sa.Boolean(),
         default=False)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """Return a string representation of the user object.
+
+        Returns:
+            str: string representation of the user object
+        """
         return f"<User ID {self.id} - {self.username}"
 
-    def set_password(self, password):
+    def set_password(self, password: str) -> None:
+        """Sets the password hash for the user.
+
+        Args:
+            password (str): the password to hash
+        """
         hasher = PasswordHasher()
         self.password_hash = hasher.hash(password)
 
-    def check_password(self, password):
+    def check_password(self, password: str) -> bool:
+        """Check the password against the stored hash.
+
+        Args:
+            password (str): the password to check
+
+        Returns:
+            bool: True if the password matches the stored hash, False otherwise
+        """
         hasher = PasswordHasher()
         try:
             return hasher.verify(self.password_hash, password)
