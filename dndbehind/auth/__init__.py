@@ -1,3 +1,5 @@
+"""The auth module."""
+
 from flask import Blueprint
 
 bp = Blueprint("auth", __name__)

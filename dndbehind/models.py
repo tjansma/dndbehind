@@ -1,6 +1,6 @@
 """Database models for the D&D Behind application."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from argon2 import PasswordHasher
@@ -63,3 +63,23 @@ class User(UserMixin, db.Model):
             return hasher.verify(self.password_hash, password)
         except Argon2Error:
             return False
+
+    def update_login_time(self) -> None:
+        """Update the last logged in time to the current time."""
+        self.last_logged_in = datetime.now(timezone.utc)
+
+    def is_disabled(self) -> bool:
+        """Check if the user is disabled.
+
+        Returns:
+            bool: True if the user is disabled, False otherwise
+        """
+        return self.disabled
+    
+    def set_disabled(self, disabled: bool) -> None:
+        """Set the disabled status of the user.
+
+        Args:
+            disabled (bool): the disabled status to set
+        """
+        self.disabled = disabled

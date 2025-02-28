@@ -62,6 +62,11 @@ def login_user() -> Response:
     if user is None or not user.check_password(password):
         return jsonify(msg="Invalid username or password."), 401
     
+    if user.disabled:
+        return jsonify(msg="User account is disabled."), 401
+
+    user.update_login_time()
+
     token = create_access_token(identity=str(user.id))
     return jsonify(token=token)
 
