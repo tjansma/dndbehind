@@ -1,13 +1,30 @@
 """Routes for user authentication and management."""
 
 from flask import request, jsonify, Response
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-import sqlalchemy as sa
-import sqlalchemy.orm as orm
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt
+from sqlalchemy.exc import IntegrityError
 
 from . import bp
 from .. import db, models
+
+
+def get_current_user() -> models.User:
+    """Returns models.User object for currently logged in user (from JWT identity).
+
+    Raises:
+        LookupError: if user with user id in JWT not found in DB. Should not occur.
+
+    Returns:
+        models.User: User object for logged in user.
+    """
+    print(get_jwt_identity())
+    current_user_id = get_jwt_identity()
+
+    current_user = models.User.query.get(current_user_id)
+    if not current_user:
+        raise LookupError("User not found.")
+    
+    return current_user
 
 
 @bp.route("/user", methods=["POST"])
@@ -79,10 +96,7 @@ def protected() -> Response:
     Returns:
         Reponse: JSON response with the username of the authenticated user.
     """
-    current_user_id = get_jwt_identity()
-
-    current_user = models.User.query.get(current_user_id)
-    if not current_user:
+    try:
+        return jsonify(logged_in_as=get_current_user().username)
+    except LookupError as lookup_error:
         return jsonify(msg="Unknown user."), 500
-    
-    return jsonify(logged_in_as=current_user.username)
