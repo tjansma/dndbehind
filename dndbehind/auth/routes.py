@@ -8,25 +8,6 @@ from . import bp
 from .. import db, models
 
 
-def get_current_user() -> models.User:
-    """Returns models.User object for currently logged in user (from JWT identity).
-
-    Raises:
-        LookupError: if user with user id in JWT not found in DB. Should not occur.
-
-    Returns:
-        models.User: User object for logged in user.
-    """
-    print(get_jwt_identity())
-    current_user_id = get_jwt_identity()
-
-    current_user = models.User.query.get(current_user_id)
-    if not current_user:
-        raise LookupError("User not found.")
-    
-    return current_user
-
-
 @bp.route("/user", methods=["POST"])
 def create_user() -> tuple[str, int]:
     """Creates new user according to JSON document in request body.
@@ -75,8 +56,12 @@ def login_user() -> Response:
     if not username or not password:
         return jsonify(msg="Username and password are required."), 400
     
-    user = db.session.query(models.User).filter(models.User.username == username).first()
-    if user is None or not user.check_password(password):
+    try:
+        user = models.User.from_username(username)
+    except LookupError:
+        return jsonify(msg="Invalid username or password."), 401
+    
+    if not user.check_password(password):
         return jsonify(msg="Invalid username or password."), 401
     
     if user.disabled:
@@ -97,6 +82,6 @@ def protected() -> Response:
         Reponse: JSON response with the username of the authenticated user.
     """
     try:
-        return jsonify(logged_in_as=get_current_user().username)
+        return jsonify(logged_in_as=models.User.from_id(get_jwt_identity()).username)
     except LookupError as lookup_error:
         return jsonify(msg="Unknown user."), 500

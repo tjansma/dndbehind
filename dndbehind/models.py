@@ -1,7 +1,7 @@
 """Database models for the D&D Behind application."""
 
 from datetime import datetime, timezone
-from typing import Optional, List, TypedDict
+from typing import Optional, List, TypedDict, Self
 
 from argon2 import PasswordHasher
 from argon2.exceptions import Argon2Error
@@ -87,6 +87,46 @@ class User(UserMixin, db.Model):
             disabled (bool): the disabled status to set
         """
         self.disabled = disabled
+
+    @classmethod
+    def from_id(cls, user_id: int) -> Self:
+        """Construct User object from data retrieved from DB by user id.
+
+        Args:
+            user_id (int): User ID
+
+        Raises:
+            LookupError: raised when user with specified ID doesn't exist in DB.
+
+        Returns:
+            Self: constructed User object.
+        """
+        user = User.query.get(user_id)
+        
+        if not user:
+            raise LookupError(f"User with ID {user_id} not found.")
+        
+        return user
+    
+    @classmethod
+    def from_username(cls, username: str) -> Self:
+        """Construct User object from data retrieved from DB by username.
+
+        Args:
+            username (int): Username
+
+        Raises:
+            LookupError: raised when user with specified username doesn't exist in DB.
+
+        Returns:
+            Self: constructed User object.
+        """
+        user = cls.query.filter(cls.username == username).first()
+        
+        if not user:
+            raise LookupError(f"User with username '{username}' not found.")
+        
+        return user
 
 
 class CharacterDict(TypedDict):
