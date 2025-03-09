@@ -129,6 +129,16 @@ class User(UserMixin, db.Model):
         return user
 
 
+class UserRole(db.Model):
+    """User roles for RBAC"""
+    __table_name__ = "user_role"
+
+    id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
+    name: orm.Mapped[str] = orm.mapped_column(sa.String[254], nullable=False, unique=True, index=True)
+    description: orm.Mapped[str] = orm.mapped_column(sa.String(1_000))
+
+    # TODO implement many-many rel. with User entity
+
 class CharacterDict(TypedDict):
     id: int
     name: str

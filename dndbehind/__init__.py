@@ -35,6 +35,6 @@ def create_app(config_class: Config = Config) -> Flask:
     app.register_blueprint(auth_bp, url_prefix="/auth")
 
     from .mgmt import bp as mgmt_bp
-    app.register_blueprint(mgmt_bp, url_prefix="/mgmt")
+    app.register_blueprint(mgmt_bp)
 
     return app

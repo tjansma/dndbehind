@@ -1,12 +1,22 @@
 """Routes for management of relatively static application data."""
 
 from flask import request, jsonify
+from flask_jwt_extended import jwt_required
 
 from . import bp
 from .. import db, models
 
 @bp.route("/background", methods=["POST"])
-def create_background():
+@jwt_required()
+def create_background() -> str:
+    """Add a new D&D background.
+
+    Raises:
+        e: raised on DB error.
+
+    Returns:
+        str: JSON document with background data
+    """
     background_data = request.get_json()
     background_name = background_data.get("name", None)
     background_desc = background_data.get("description", None   )
@@ -24,7 +34,13 @@ def create_background():
 
 
 @bp.route("/background", methods=["GET"])
-def list_backgounds():
+@jwt_required()
+def list_backgounds() -> str:
+    """Return list with all data for all backgrounds.
+
+    Returns:
+        str: JSON document containing that list.
+    """
     backgrounds = models.Background.query.all()
     return jsonify([
         background.as_dict() for background in backgrounds
