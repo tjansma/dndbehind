@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from . import bp
 from .. import db, models
-
+from .rbac import admin_required
 
 @bp.route("/user", methods=["POST"])
 def create_user() -> tuple[str, int]:
@@ -69,7 +69,9 @@ def login_user() -> Response:
 
     user.update_login_time()
 
-    token = create_access_token(identity=str(user.id))
+    user_roles = [ role.name for role in user.roles ]
+
+    token = create_access_token(identity=str(user.id), additional_claims={ "roles": user_roles })
     return jsonify(token=token)
 
 
@@ -85,3 +87,37 @@ def protected() -> Response:
         return jsonify(logged_in_as=models.User.from_id(get_jwt_identity()).username)
     except LookupError as lookup_error:
         return jsonify(msg="Unknown user."), 500
+
+
+@bp.route("/userrole/<int:user_id>", methods=["POST"])
+@admin_required
+def add_roles_to_user(user_id: int) -> Response:
+    """Adds roles to specified user, identified by user_id.
+
+    Args:
+        user_id (_type_): user ID of user to add roles to.
+
+    Returns:
+        Response:  JSON response with status message of result.
+    """
+    try:
+        target_user = models.User.from_id(user_id)
+    except LookupError:
+        return jsonify(msg="Unknown user"), 400
+
+    rolenames = request.json.get("roles", None)
+    if rolenames is None:
+        return jsonify(msg="List of roles missing"), 400
+    
+    db.session.begin()
+    try:
+        for rolename in rolenames:
+            current_role = models.Role.from_rolename(rolename)
+            if current_role not in target_user.roles:
+                target_user.roles.append(current_role)
+    except LookupError as lookup_error:
+        db.session.rollback()
+        return jsonify(msg="Unknown role name."), 400
+    
+    db.session.commit()
+    return jsonify(msg="Roles assigned to user.")

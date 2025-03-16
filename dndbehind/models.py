@@ -12,6 +12,15 @@ import sqlalchemy.orm as orm
 from . import db
 
 
+# Table representing user <-> role many-to-many relationship
+user_roles_table = sa.Table(
+    "user_role",
+    db.Model.metadata,
+    sa.Column("user_id", sa.ForeignKey("user.id"), primary_key=True),
+    sa.Column("role_id", sa.ForeignKey("role.id"), primary_key=True)
+)
+
+
 class User(UserMixin, db.Model):
     """User model for the application."""
     __table_name__ = "user"
@@ -35,6 +44,7 @@ class User(UserMixin, db.Model):
         default=False)
     
     characters: orm.Mapped[List["Character"]] = orm.relationship(back_populates="owner")
+    roles: orm.Mapped[List["Role"]] = orm.relationship(secondary=user_roles_table, back_populates="users")
 
     def __repr__(self) -> str:
         """Return a string representation of the user object.
@@ -42,7 +52,7 @@ class User(UserMixin, db.Model):
         Returns:
             str: string representation of the user object
         """
-        return f"<User ID {self.id} - {self.username}"
+        return f"<User ID {self.id} - {self.username}>"
 
     def set_password(self, password: str) -> None:
         """Sets the password hash for the user.
@@ -129,15 +139,32 @@ class User(UserMixin, db.Model):
         return user
 
 
-class UserRole(db.Model):
+class Role(db.Model):
     """User roles for RBAC"""
-    __table_name__ = "user_role"
+    __table_name__ = "role"
 
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
     name: orm.Mapped[str] = orm.mapped_column(sa.String[254], nullable=False, unique=True, index=True)
     description: orm.Mapped[str] = orm.mapped_column(sa.String(1_000))
 
-    # TODO implement many-many rel. with User entity
+    users: orm.Mapped[List["User"]] = orm.relationship(secondary=user_roles_table, back_populates="roles")
+
+    @classmethod
+    def from_rolename(cls, rolename: str) -> Self:
+        """Construct Role object from data retrieved from DB by role name.
+
+        Args:
+            rolename (str): name of role as stored in DB.
+
+        Returns:
+            Self: constructed Role object.
+        """
+        role = cls.query.filter(cls.name == rolename).first()
+
+        if not role:
+            raise LookupError(f"Unknown role: {rolename}")
+        
+        return role
 
 class CharacterDict(TypedDict):
     id: int
@@ -226,3 +253,5 @@ class Background(db.Model):
             "name": self.name,
             "description": self.description
         }
+
+print("dndbehind.Models")
