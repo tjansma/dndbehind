@@ -4,7 +4,7 @@ from functools import wraps
 from typing import Callable
 
 from flask import jsonify
-from flask_jwt_extended import verify_jwt_in_request, get_jwt
+from flask_jwt_extended import verify_jwt_in_request
 
 
 def admin_required(fn: Callable):

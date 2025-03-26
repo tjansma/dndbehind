@@ -1,6 +1,6 @@
 """Routes for user authentication and management."""
 
-from flask import request, jsonify, Response
+from flask import request, jsonify, Response, abort
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt
 from sqlalchemy.exc import IntegrityError
 
@@ -88,14 +88,47 @@ def protected() -> Response:
     except LookupError as lookup_error:
         return jsonify(msg="Unknown user."), 500
 
+@bp.route("/userrole", methods=["GET"])
+@admin_required
+def list_all_user_roles() -> Response:
+    """List all users and all roles assigned to them.
 
-@bp.route("/userrole/<int:user_id>", methods=["POST"])
+    Returns:
+        Response: JSON with all roles assigned to all users.
+    """
+    all_users = models.User.query.all()
+    result = []
+    for user in all_users:
+        result.append(user.as_dict())
+        result[-1]["roles"] = [ role.as_dict() for role in user.roles ]
+    
+    return jsonify(result)
+
+@bp.route("/userrole/<int:user_id>", methods=["GET"])
+@admin_required
+def list_specific_user_roles(user_id: int) -> Response:
+    """List all roles assigned to specific user.
+
+    Args:
+        user_id (int): user ID to list roles for.
+
+    Returns:
+        Response: JSON encoded list of roles.
+    """
+    user = models.User.from_id(user_id)
+    result_dict = user.as_dict()
+    result_dict["roles"] = [ role.as_dict() for role in user.roles ]
+
+    return jsonify(result_dict)
+
+@bp.route("/userrole/<int:user_id>", methods=["PUT"])
 @admin_required
 def add_roles_to_user(user_id: int) -> Response:
     """Adds roles to specified user, identified by user_id.
+    Requires list of roles in request body.
 
     Args:
-        user_id (_type_): user ID of user to add roles to.
+        user_id (int): user ID of user to add roles to.
 
     Returns:
         Response:  JSON response with status message of result.
@@ -103,13 +136,13 @@ def add_roles_to_user(user_id: int) -> Response:
     try:
         target_user = models.User.from_id(user_id)
     except LookupError:
-        return jsonify(msg="Unknown user"), 400
+        return jsonify(msg="Unknown user"), 404
 
     rolenames = request.json.get("roles", None)
     if rolenames is None:
         return jsonify(msg="List of roles missing"), 400
     
-    db.session.begin()
+    # db.session.begin()
     try:
         for rolename in rolenames:
             current_role = models.Role.from_rolename(rolename)
@@ -121,3 +154,42 @@ def add_roles_to_user(user_id: int) -> Response:
     
     db.session.commit()
     return jsonify(msg="Roles assigned to user.")
+
+@bp.route("/userrole/<int:user_id>", methods=["DELETE"])
+@admin_required
+def delete_roles_from_user(user_id: int) -> Response:
+    """Removes roles from specified user, identified by user_id.
+    Requires list of roles in request body.
+
+    Args:
+        user_id (int): user ID of user to remove roles from.
+
+    Returns:
+        Response:  JSON response with status message of result.
+    """
+    try:
+        target_user = models.User.from_id(user_id)
+    except LookupError:
+        return jsonify(msg="Unknown user"), 404
+    
+    try:
+        rolenames = request.json.get("roles", None)
+    except AttributeError:
+        return jsonify(msg="Malformed request"), 400
+    if rolenames is None:
+        return jsonify(msg="List of roles missing"), 400
+    
+    # db.session.begin()
+    try:
+        for rolename in rolenames:
+            current_role = models.Role.from_rolename(rolename)
+            target_user.roles.remove(current_role)
+    except ValueError:
+        db.session.rollback()
+        return jsonify(msg="Specified role was not assigned to user, cannot remove"), 400
+    except LookupError:
+        db.session.rollback()
+        return jsonify(msg="Unknown role"), 404
+    
+    db.session.commit()
+    return jsonify(msg="Roles removed from user.")

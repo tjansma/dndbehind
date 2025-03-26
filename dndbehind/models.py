@@ -98,6 +98,15 @@ class User(UserMixin, db.Model):
         """
         self.disabled = disabled
 
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
+            "last_logged_in": self.last_logged_in,
+            "disabled": self.disabled
+        }
+
     @classmethod
     def from_id(cls, user_id: int) -> Self:
         """Construct User object from data retrieved from DB by user id.
@@ -165,6 +174,13 @@ class Role(db.Model):
             raise LookupError(f"Unknown role: {rolename}")
         
         return role
+    
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description
+        }
 
 class CharacterDict(TypedDict):
     id: int
@@ -253,5 +269,3 @@ class Background(db.Model):
             "name": self.name,
             "description": self.description
         }
-
-print("dndbehind.Models")
