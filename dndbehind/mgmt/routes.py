@@ -5,9 +5,10 @@ from flask_jwt_extended import jwt_required
 
 from . import bp
 from .. import db, models
+from ..auth.rbac import maintainer_required
 
 @bp.route("/background", methods=["POST"])
-@jwt_required()
+@maintainer_required
 def create_background() -> str:
     """Add a new D&D background.
 
@@ -34,7 +35,7 @@ def create_background() -> str:
 
 
 @bp.route("/background", methods=["GET"])
-@jwt_required()
+@maintainer_required
 def list_backgounds() -> str:
     """Return list with all data for all backgrounds.
 
@@ -45,3 +46,4 @@ def list_backgounds() -> str:
     return jsonify([
         background.as_dict() for background in backgrounds
     ])
+

@@ -81,6 +81,7 @@ class User(UserMixin, db.Model):
     def update_login_time(self) -> None:
         """Update the last logged in time to the current time."""
         self.last_logged_in = datetime.now(timezone.utc)
+        db.session.commit()
 
     def is_disabled(self) -> bool:
         """Check if the user is disabled.

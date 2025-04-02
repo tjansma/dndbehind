@@ -1,7 +1,7 @@
 """Routes for user authentication and management."""
 
-from flask import request, jsonify, Response, abort
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, get_jwt
+from flask import request, jsonify, Response
+from flask_jwt_extended import create_access_token, jwt_required, current_user
 from sqlalchemy.exc import IntegrityError
 
 from . import bp
@@ -9,7 +9,7 @@ from .. import db, models
 from .rbac import admin_required
 
 @bp.route("/user", methods=["POST"])
-def create_user() -> tuple[str, int]:
+def create_user() -> Response:
     """Creates new user according to JSON document in request body.
 
     Returns:
@@ -75,16 +75,16 @@ def login_user() -> Response:
     return jsonify(token=token)
 
 
-@bp.route("/protected", methods=["GET"])
+@bp.route("/whoami", methods=["GET"])
 @jwt_required()
-def protected() -> Response:
+def whoami() -> Response:
     """Protected route that requires a valid JWT token to access.
 
     Returns:
         Reponse: JSON response with the username of the authenticated user.
     """
     try:
-        return jsonify(logged_in_as=models.User.from_id(get_jwt_identity()).username)
+        return jsonify(logged_in_as=current_user.as_dict())
     except LookupError as lookup_error:
         return jsonify(msg="Unknown user."), 500
 
