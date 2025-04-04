@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from . import bp
 from .. import db, models
-from .rbac import role_required
+from .rbac import role_required, self_or_role_required
 
 
 @bp.route("/user", methods=["POST"])
@@ -39,6 +39,29 @@ def create_user() -> Response:
         db.session.rollback()
         return jsonify(error="Unknown error", message="An unexpected error occurred. User not created."), 500
 
+
+@bp.route("/user/<int:user_id>", methods=["PUT", "PATCH"])
+@self_or_role_required("user_id", "admin")
+def update_user(user_id: int) -> Response:
+    
+    updated_userdata = request.get_json()
+    target_user = models.User.from_id(user_id)
+    if target_user is None:
+        return jsonify(msg="Unknown user"), 404
+    
+    if "username" in updated_userdata:
+        target_user.username = updated_userdata["username"]
+    if "email" in updated_userdata:
+        target_user.email = updated_userdata["email"]
+    if "password" in updated_userdata:
+        target_user.set_password(updated_userdata["password"])
+    if "disabled" in updated_userdata:
+        target_user.disabled = updated_userdata["disabled"]
+    if "last_logged_in" in updated_userdata:
+        target_user.last_logged_in = updated_userdata["last_logged_in"]
+    db.session.commit()
+
+    return jsonify(msg="User updated successfully.", user=target_user.as_dict()), 202
 
 @bp.route("/login", methods=["POST"])
 def login_user() -> Response:
