@@ -6,7 +6,8 @@ from sqlalchemy.exc import IntegrityError
 
 from . import bp
 from .. import db, models
-from .rbac import admin_required
+from .rbac import role_required
+
 
 @bp.route("/user", methods=["POST"])
 def create_user() -> Response:
@@ -89,7 +90,7 @@ def whoami() -> Response:
         return jsonify(msg="Unknown user."), 500
 
 @bp.route("/userrole", methods=["GET"])
-@admin_required
+@role_required("admin")
 def list_all_user_roles() -> Response:
     """List all users and all roles assigned to them.
 
@@ -105,7 +106,7 @@ def list_all_user_roles() -> Response:
     return jsonify(result)
 
 @bp.route("/userrole/<int:user_id>", methods=["GET"])
-@admin_required
+@role_required("admin")
 def list_specific_user_roles(user_id: int) -> Response:
     """List all roles assigned to specific user.
 
@@ -122,7 +123,7 @@ def list_specific_user_roles(user_id: int) -> Response:
     return jsonify(result_dict)
 
 @bp.route("/userrole/<int:user_id>", methods=["PUT"])
-@admin_required
+@role_required("admin")
 def add_roles_to_user(user_id: int) -> Response:
     """Adds roles to specified user, identified by user_id.
     Requires list of roles in request body.
@@ -156,7 +157,7 @@ def add_roles_to_user(user_id: int) -> Response:
     return jsonify(msg="Roles assigned to user.")
 
 @bp.route("/userrole/<int:user_id>", methods=["DELETE"])
-@admin_required
+@role_required("admin")
 def delete_roles_from_user(user_id: int) -> Response:
     """Removes roles from specified user, identified by user_id.
     Requires list of roles in request body.

@@ -1,9 +1,9 @@
 """Role based access control functionality."""
 
 from functools import wraps
-from typing import Callable
+from typing import Callable, Iterable
 
-from flask import jsonify, request
+from flask import Response, jsonify, request
 from flask_jwt_extended import verify_jwt_in_request, current_user
 
 from ..models import Owned
@@ -22,94 +22,14 @@ def _has_role(jwt_data: dict, role_name: str) -> bool:
     return "roles" in jwt_data and role_name in jwt_data["roles"]
 
 
-def admin_required(fn: Callable):
-    """Wrapper for functions requiring administrative access.
-
-    Args:
-        fn (Callable): function/endpoint requiring administrative access
-
-    Returns:
-        _type_: wrapper
-    """
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        _, jwt_data = verify_jwt_in_request()
-
-        if not _has_role(jwt_data, "admin"):
-            return jsonify(msg="Administrative access required."), 403
-        else:
-            return fn(*args, **kwargs)
-        
-    return wrapper
-
-
-def maintainer_required(fn: Callable):
-    """Wrapper for functions requiring maintainer access.
-
-    Args:
-        fn (Callable): function/endpoint requiring maintenance access
-
-    Returns:
-        _type_: wrapper
-    """
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        _, jwt_data = verify_jwt_in_request()
-
-        if not _has_role(jwt_data, "maintainer"):
-            return jsonify(msg="Maintenance access required."), 403
-        else:
-            return fn(*args, **kwargs)
-        
-    return wrapper
-
-
-def operator_required(fn: Callable):
-    """Wrapper for functions requiring operator access.
-
-    Args:
-        fn (Callable): function/endpoint requiring operator access
-
-    Returns:
-        _type_: wrapper
-    """
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        _, jwt_data = verify_jwt_in_request()
-
-        if not _has_role(jwt_data, "operator"):
-            return jsonify(msg="Operator access required."), 403
-        else:
-            return fn(*args, **kwargs)
-        
-    return wrapper
-
-
-def dummy_decorator(fn: Callable):
-    """Wrapper that does nothing. Can be used for interactive debugging.
-
-    Args:
-        fn (Callable): function/endpoint requiring operator access
-
-    Returns:
-        _type_: wrapper
-    """
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        _, jwt_data = verify_jwt_in_request()
-
-        return fn(*args, **kwargs)
-        
-    return wrapper
-
-
-def owner_or_operator_required(resource_type: type, resource_id_name: str):
-    """Decorator for functions requiring either owner or operator access.
-    This decorator checks if the current user is either the owner of the resource or has the operator role.
+def owner_or_role_required(resource_type: type, resource_id_name: str, *role_names: str) -> Callable:
+    """Decorator for functions requiring either owner or role-based access.
+    This decorator checks if the current user is either the owner of the resource or has one of the specified roles.
 
     Args:
         resource_type (type): Description of the resource type (e.g., models.Character)
         resource_id_name (str): Name of the resource ID in the request view arguments (e.g., "character_id")
+        role_names (str): Names of the roles to check for (e.g., "admin", "operator")
     """
     def inner_decorator(fn: Callable):
         @wraps(fn)
@@ -118,11 +38,35 @@ def owner_or_operator_required(resource_type: type, resource_id_name: str):
 
             resource_id = request.view_args[resource_id_name]
             resource = resource_type.query.get(resource_id)
-            if resource.owner == current_user or \
-                    _has_role(jwt_data, "operator"):
+            if resource.owner == current_user:
                 return fn(*args, **kwargs)
-            else:
-                return jsonify(msg="Owner or operator access required."), 403
             
+            for role_name in role_names:
+                if _has_role(jwt_data, role_name):
+                    return fn(*args, **kwargs)
+
+            return jsonify(msg="Access denied."), 403
+            
+        return wrapper
+    return inner_decorator
+
+
+def role_required(*role_names: str) -> Callable:
+    """Decorator for functions requiring (a) specific role(s).
+    This decorator checks if the current user has one of the specified roles.
+
+    Args:
+        role_names (str): Names of the roles to check for (e.g., "admin", "operator")
+    """
+    def inner_decorator(fn: Callable) -> Callable:
+        @wraps(fn)
+        def wrapper(*args, **kwargs) -> Callable | Response:
+            _, jwt_data = verify_jwt_in_request()
+
+            for role_name in role_names:
+                if _has_role(jwt_data, role_name):
+                    return fn(*args, **kwargs)
+            
+            return jsonify(msg="Access denied."), 403         
         return wrapper
     return inner_decorator

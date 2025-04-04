@@ -5,10 +5,10 @@ from flask_jwt_extended import jwt_required
 
 from . import bp
 from .. import db, models
-from ..auth.rbac import maintainer_required, is_owner_or_operator_of, owner_or_operator_required
+from ..auth.rbac import role_required,  owner_or_role_required
 
 @bp.route("/background", methods=["POST"])
-@maintainer_required
+@role_required("maintainer")
 def create_background() -> str:
     """Add a new D&D background.
 
@@ -35,7 +35,7 @@ def create_background() -> str:
 
 
 @bp.route("/background", methods=["GET"])
-@maintainer_required
+@role_required("maintainer")
 def list_backgounds() -> str:
     """Return list with all data for all backgrounds.
 
@@ -49,7 +49,7 @@ def list_backgounds() -> str:
 
 
 @bp.route("/character/<int:character_id>", methods=["GET"])
-@owner_or_operator_required(models.Character, "character_id")
+@owner_or_role_required(models.Character, "character_id", "operator")
 def get_character(character_id: int) -> Response:
     """Get character data for a specific character.
 
