@@ -3,8 +3,10 @@
 from functools import wraps
 from typing import Callable
 
-from flask import jsonify
-from flask_jwt_extended import verify_jwt_in_request
+from flask import jsonify, request
+from flask_jwt_extended import verify_jwt_in_request, current_user
+
+from ..models import Owned
 
 
 def _has_role(jwt_data: dict, role_name: str) -> bool:
@@ -60,3 +62,67 @@ def maintainer_required(fn: Callable):
             return fn(*args, **kwargs)
         
     return wrapper
+
+
+def operator_required(fn: Callable):
+    """Wrapper for functions requiring operator access.
+
+    Args:
+        fn (Callable): function/endpoint requiring operator access
+
+    Returns:
+        _type_: wrapper
+    """
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        _, jwt_data = verify_jwt_in_request()
+
+        if not _has_role(jwt_data, "operator"):
+            return jsonify(msg="Operator access required."), 403
+        else:
+            return fn(*args, **kwargs)
+        
+    return wrapper
+
+
+def dummy_decorator(fn: Callable):
+    """Wrapper that does nothing. Can be used for interactive debugging.
+
+    Args:
+        fn (Callable): function/endpoint requiring operator access
+
+    Returns:
+        _type_: wrapper
+    """
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        _, jwt_data = verify_jwt_in_request()
+
+        return fn(*args, **kwargs)
+        
+    return wrapper
+
+
+def owner_or_operator_required(resource_type: type, resource_id_name: str):
+    """Decorator for functions requiring either owner or operator access.
+    This decorator checks if the current user is either the owner of the resource or has the operator role.
+
+    Args:
+        resource_type (type): Description of the resource type (e.g., models.Character)
+        resource_id_name (str): Name of the resource ID in the request view arguments (e.g., "character_id")
+    """
+    def inner_decorator(fn: Callable):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            _, jwt_data = verify_jwt_in_request()
+
+            resource_id = request.view_args[resource_id_name]
+            resource = resource_type.query.get(resource_id)
+            if resource.owner == current_user or \
+                    _has_role(jwt_data, "operator"):
+                return fn(*args, **kwargs)
+            else:
+                return jsonify(msg="Owner or operator access required."), 403
+            
+        return wrapper
+    return inner_decorator

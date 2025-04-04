@@ -1,11 +1,11 @@
 """Routes for management of relatively static application data."""
 
-from flask import request, jsonify
+from flask import request, jsonify, Response
 from flask_jwt_extended import jwt_required
 
 from . import bp
 from .. import db, models
-from ..auth.rbac import maintainer_required
+from ..auth.rbac import maintainer_required, is_owner_or_operator_of, owner_or_operator_required
 
 @bp.route("/background", methods=["POST"])
 @maintainer_required
@@ -47,3 +47,16 @@ def list_backgounds() -> str:
         background.as_dict() for background in backgrounds
     ])
 
+
+@bp.route("/character/<int:character_id>", methods=["GET"])
+@owner_or_operator_required(models.Character, "character_id")
+def get_character(character_id: int) -> Response:
+    """Get character data for a specific character.
+
+    Args:
+        character_id (int): ID of the character to retrieve.
+
+    Returns:
+        Response: JSON response with character data or 403 if not owner of character and not operator.
+    """
+    return jsonify({ "character": models.Character.query.get(character_id).as_dict() })

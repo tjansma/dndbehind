@@ -1,7 +1,7 @@
 """Database models for the D&D Behind application."""
 
 from datetime import datetime, timezone
-from typing import Optional, List, TypedDict, Self
+from typing import Optional, List, TypedDict, Self, Protocol
 
 from argon2 import PasswordHasher
 from argon2.exceptions import Argon2Error
@@ -147,6 +147,10 @@ class User(UserMixin, db.Model):
             raise LookupError(f"User with username '{username}' not found.")
         
         return user
+
+
+class Owned(Protocol):
+    owner: User
 
 
 class Role(db.Model):
