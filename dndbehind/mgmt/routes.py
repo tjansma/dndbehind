@@ -26,7 +26,8 @@ def create_background() -> str:
         return jsonify(msg="Background name and description required."), 400
     
     try:
-        new_background = models.Background(name=background_name, description=background_desc)
+        new_background = models.Background(name=background_name,
+                                           description=background_desc)
         db.session.add(new_background)
         db.session.commit()
         return jsonify(new_background.as_dict())
@@ -48,6 +49,20 @@ def list_backgounds() -> str:
     ])
 
 
+@bp.route("/background/<int:background_id>", methods=["PUT"])
+@role_required("maintainer")
+def update_background(background_id: int) -> str:
+    """Update a background.
+
+    Args:
+        background_id (int): ID of the background to update.
+
+    Returns:
+        str: JSON document with updated background data.
+    """
+    raise NotImplementedError("Not implemented yet.")
+
+
 @bp.route("/character/<int:character_id>", methods=["GET"])
 @owner_or_role_required(models.Character, "character_id", "operator")
 def get_character(character_id: int) -> Response:
@@ -57,6 +72,9 @@ def get_character(character_id: int) -> Response:
         character_id (int): ID of the character to retrieve.
 
     Returns:
-        Response: JSON response with character data or 403 if not owner of character and not operator.
+        Response: JSON response with character data or 403 if not owner of
+                  character and not operator.
     """
-    return jsonify({ "character": models.Character.query.get(character_id).as_dict() })
+    return jsonify(
+        { "character": models.Character.query.get(character_id).as_dict() }
+    )

@@ -1,12 +1,32 @@
 """Routes for user authentication and management."""
 
-from flask import request, jsonify, Response
+from flask import request, jsonify, Response, url_for
 from flask_jwt_extended import create_access_token, jwt_required, current_user
 from sqlalchemy.exc import IntegrityError
 
 from . import bp
 from .. import db, models
 from .rbac import role_required, self_or_role_required
+from ..utils import make_response_without_resource_state, \
+    required_keys_present, make_response_with_resource_state
+
+
+@bp.route("/user/<int:user_id>", methods=["GET"])
+@self_or_role_required("user_id", "admin")
+def get_user(user_id: int) -> Response:
+    """Retrieves user according to user ID specified in the URL path.
+
+    Args:
+        user_id (int): ID of the user to retrieve.
+
+    Returns:
+        Response: JSON response with user data.
+    """
+    try:
+        target_user = models.User.from_id(user_id)
+        return jsonify(target_user.as_dict())
+    except LookupError as lookup_error:
+        return jsonify(msg="Unknown user"), 404
 
 
 @bp.route("/user", methods=["POST"])
@@ -14,40 +34,91 @@ def create_user() -> Response:
     """Creates new user according to JSON document in request body.
 
     Returns:
-        tuple[str, int]: message and HTTP result code<br>
-            On succes, the message will be the new user ID and the status code will be 201.
-            If the email address is already registered, an appropriate message and status code 409 will be returned.
-            If any other error occurs, a generic error message and status code 500 will be returned.
+        tuple[str, int]: message and HTTP result code
+
+            On success, the message will be the new user ID and the status code 
+            will be 201.
+            If the email address is already registered, an appropriate message 
+            and status code 409 will be returned.
+            If any other error occurs, a generic error message and status code
+            500 will be returned.
     """
     userdata = request.get_json()
+    required_keys = {"username", "email", "password"}
+
+    if not required_keys_present(required_keys, userdata):
+        return jsonify(
+                error="Bad request", message="Missing required fields."
+            ), 400
+
     new_user = models.User(
         username=userdata["username"],
         email=userdata["email"],
     )
+    
     try:
         db.session.add(new_user)
-
-        if "password" in userdata:
-            new_user.set_password(userdata["password"])
-        
+        new_user.set_password(userdata["password"])
         db.session.commit()
-        return jsonify(id=new_user.id), 201
+
+        response = make_response_with_resource_state(
+            message="User created successfully.",
+            status_code=201,
+            resource_state=new_user.as_dict()
+        )
+        response.headers["Location"] = url_for(
+            'auth.get_user',
+            user_id=new_user.id,
+            _external=True)
+
+        return response
+    
     except IntegrityError as integrity_error:
         db.session.rollback()
-        return jsonify(error="Conflict", message="Unable to create user; duplicate email address?"), 409
-    except Exception as e:
-        db.session.rollback()
-        return jsonify(error="Unknown error", message="An unexpected error occurred. User not created."), 500
+        return make_response_without_resource_state(
+            message="Unable to create user; duplicate email address?",
+            status_code=409)
 
 
 @bp.route("/user/<int:user_id>", methods=["PUT", "PATCH"])
 @self_or_role_required("user_id", "admin")
 def update_user(user_id: int) -> Response:
-    
+    """Updates user according to JSON document in request body.
+    The user ID is specified in the URL path.
+    The user ID must be the same as the one in the JWT token, or the user must
+    have the "admin" role.
+
+    Args:
+        user_id (int): ID of the user to update.
+
+    Returns:
+        Response: JSON response with status message of result.        
+    """
+    valid_field_set = {
+        "username",
+        "email",
+        "password",
+        "disabled",
+        "last_logged_in"
+    }
+
     updated_userdata = request.get_json()
     target_user = models.User.from_id(user_id)
+
+    # Check if the target user exists
+    # If not, return an error message
     if target_user is None:
         return jsonify(msg="Unknown user"), 404
+    
+    # Check if any valid fields are present in the request
+    # If not, return an error message
+    if not valid_field_set.intersection(updated_userdata.keys()):
+        return jsonify(msg="No valid fields to update."), 400
+    
+    # Check if any invalid fields are present in the request
+    # If so, return an error message
+    if set(updated_userdata.keys()).difference(valid_field_set):
+        return jsonify(msg="Invalid fields in request."), 400
     
     if "username" in updated_userdata:
         target_user.username = updated_userdata["username"]
@@ -61,7 +132,10 @@ def update_user(user_id: int) -> Response:
         target_user.last_logged_in = updated_userdata["last_logged_in"]
     db.session.commit()
 
-    return jsonify(msg="User updated successfully.", user=target_user.as_dict()), 202
+    return jsonify(
+            msg="User updated successfully.",
+            user=target_user.as_dict())
+
 
 @bp.route("/login", methods=["POST"])
 def login_user() -> Response:
@@ -69,9 +143,12 @@ def login_user() -> Response:
 
     Returns:
         Response: JSON response with user ID and status code<br>
-            On success, the response will contain the user ID and status code 200.<br>
-            If the username or password is missing, an appropriate message and status code 400 will be returned.<br>
-            If the username or password is incorrect, an appropriate message and status code 401 will be returned.
+            On success, the response will contain the user ID and status code 
+            200.<br>
+            If the username or password is missing, an appropriate message and 
+            status code 400 will be returned.<br>
+            If the username or password is incorrect, an appropriate message 
+            and status code 401 will be returned.
     """
     
     username = request.json.get("username", None)
@@ -95,7 +172,9 @@ def login_user() -> Response:
 
     user_roles = [ role.name for role in user.roles ]
 
-    token = create_access_token(identity=str(user.id), additional_claims={ "roles": user_roles })
+    token = create_access_token(
+        identity=str(user.id),
+        additional_claims={ "roles": user_roles })
     return jsonify(token=token)
 
 
@@ -210,7 +289,9 @@ def delete_roles_from_user(user_id: int) -> Response:
             target_user.roles.remove(current_role)
     except ValueError:
         db.session.rollback()
-        return jsonify(msg="Specified role was not assigned to user, cannot remove"), 400
+        return jsonify(
+                msg="Specified role was not assigned to user, cannot remove"
+            ), 400
     except LookupError:
         db.session.rollback()
         return jsonify(msg="Unknown role"), 404

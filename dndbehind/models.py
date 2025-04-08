@@ -21,6 +21,14 @@ user_roles_table = sa.Table(
 )
 
 
+class UserDict(TypedDict):
+    id: Optional[int]
+    username: str
+    email: str
+    last_logged_in: Optional[datetime]
+    disabled: Optional[bool]
+
+
 class User(UserMixin, db.Model):
     """User model for the application."""
     __table_name__ = "user"
@@ -43,8 +51,10 @@ class User(UserMixin, db.Model):
         sa.Boolean(),
         default=False)
     
-    characters: orm.Mapped[List["Character"]] = orm.relationship(back_populates="owner")
-    roles: orm.Mapped[List["Role"]] = orm.relationship(secondary=user_roles_table, back_populates="users")
+    characters: orm.Mapped[List["Character"]] = \
+        orm.relationship(back_populates="owner")
+    roles: orm.Mapped[List["Role"]] = \
+        orm.relationship(secondary=user_roles_table, back_populates="users")
 
     def __repr__(self) -> str:
         """Return a string representation of the user object.
@@ -136,7 +146,8 @@ class User(UserMixin, db.Model):
             username (int): Username
 
         Raises:
-            LookupError: raised when user with specified username doesn't exist in DB.
+            LookupError: raised when user with specified username doesn't exist
+                         in DB.
 
         Returns:
             Self: constructed User object.
@@ -158,10 +169,15 @@ class Role(db.Model):
     __table_name__ = "role"
 
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
-    name: orm.Mapped[str] = orm.mapped_column(sa.String[254], nullable=False, unique=True, index=True)
+    name: orm.Mapped[str] = orm.mapped_column(sa.String[254],
+                                              nullable=False,
+                                              unique=True,
+                                              index=True)
     description: orm.Mapped[str] = orm.mapped_column(sa.String(1_000))
 
-    users: orm.Mapped[List["User"]] = orm.relationship(secondary=user_roles_table, back_populates="roles")
+    users: orm.Mapped[List["User"]] = orm.relationship(
+        secondary=user_roles_table,
+        back_populates="roles")
 
     @classmethod
     def from_rolename(cls, rolename: str) -> Self:
@@ -206,20 +222,31 @@ class Character(db.Model):
     __table_name__ = "character"
 
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
-    name: orm.Mapped[str] = orm.mapped_column(sa.String(254), nullable=False, index=True)
-    description: orm.Mapped[str] = orm.mapped_column(sa.String(1_000_000), nullable=True)
-    backstory: orm.Mapped[str] = orm.mapped_column(sa.String(1_000_000), nullable=True)
-    strength: orm.Mapped[int] = orm.mapped_column(sa.Integer(), nullable=False)
-    dexterity: orm.Mapped[int] = orm.mapped_column(sa.Integer(), nullable=False)
-    constitution: orm.Mapped[int] = orm.mapped_column(sa.Integer(), nullable=False)
-    intelligence: orm.Mapped[int] = orm.mapped_column(sa.Integer(), nullable=False)
-    wisdom: orm.Mapped[int] = orm.mapped_column(sa.Integer(), nullable=False)
-    charisma: orm.Mapped[int] = orm.mapped_column(sa.Integer(), nullable=False)
+    name: orm.Mapped[str] = orm.mapped_column(sa.String(254),
+                                              nullable=False,
+                                              index=True)
+    description: orm.Mapped[str] = orm.mapped_column(sa.String(1_000_000),
+                                                     nullable=True)
+    backstory: orm.Mapped[str] = orm.mapped_column(sa.String(1_000_000),
+                                                   nullable=True)
+    strength: orm.Mapped[int] = orm.mapped_column(sa.Integer(),
+                                                  nullable=False)
+    dexterity: orm.Mapped[int] = orm.mapped_column(sa.Integer(),
+                                                   nullable=False)
+    constitution: orm.Mapped[int] = orm.mapped_column(sa.Integer(),
+                                                      nullable=False)
+    intelligence: orm.Mapped[int] = orm.mapped_column(sa.Integer(),
+                                                      nullable=False)
+    wisdom: orm.Mapped[int] = orm.mapped_column(sa.Integer(),
+                                                nullable=False)
+    charisma: orm.Mapped[int] = orm.mapped_column(sa.Integer(),
+                                                  nullable=False)
 
     owner_id: orm.Mapped[int] = orm.mapped_column(sa.ForeignKey("user.id"))
     owner: orm.Mapped["User"] = orm.relationship(back_populates="characters")
 
-    background_id: orm.Mapped[int] = orm.mapped_column(sa.ForeignKey("background.id"))
+    background_id: orm.Mapped[int] = orm.mapped_column(
+        sa.ForeignKey("background.id"))
     background: orm.Mapped["Background"] = orm.relationship()
 
     def __repr__(self) -> str:
@@ -257,8 +284,12 @@ class Background(db.Model):
     __table_name__ = "background"
 
     id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
-    name: orm.Mapped[str] = orm.mapped_column(sa.String(254), nullable=False, unique=True, index=True)
-    description: orm.Mapped[str] = orm.mapped_column(sa.String(100_000), nullable=False)
+    name: orm.Mapped[str] = orm.mapped_column(sa.String(254),
+                                              nullable=False,
+                                              unique=True,
+                                              index=True)
+    description: orm.Mapped[str] = orm.mapped_column(sa.String(100_000),
+                                                     nullable=False)
 
     def __repr__(self) -> str:
         """Return a string representation of the background object.

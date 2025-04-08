@@ -10,7 +10,8 @@ from ..models import Owned, User
 
 
 def _has_role(jwt_data: dict, role_name: str) -> bool:
-    """Check of JWT data contains roles, and if so, if the specified role is contained.
+    """Check of JWT data contains roles, and if so, if the specified role is
+    contained.
 
     Args:
         jwt_data (dict): JSON Web Token data as a dictionary
@@ -24,11 +25,14 @@ def _has_role(jwt_data: dict, role_name: str) -> bool:
 
 def self_or_role_required(user_id_arg_name: str, *role_names: str) -> Callable:
     """Decorator for functions requiring either self or role-based access.
-    This decorator checks if the current user is either the target user or has one of the specified roles.
+    This decorator checks if the current user is either the target user or has
+    one of the specified roles.
 
     Args:
-        user_id_arg_name (str): Name of the user ID in the request view arguments (e.g., "user_id")
-        role_names (str): Names of the roles to check for (e.g., "admin", "operator")
+        user_id_arg_name (str): Name of the user ID in the request view
+                                arguments (e.g., "user_id")
+        role_names (str): Names of the roles to check for (e.g., "admin",
+                          "operator")
     """
     def inner_decorator(fn: Callable):
         @wraps(fn)
@@ -49,14 +53,20 @@ def self_or_role_required(user_id_arg_name: str, *role_names: str) -> Callable:
     return inner_decorator
 
 
-def owner_or_role_required(resource_type: type, resource_id_arg_name: str, *role_names: str) -> Callable:
+def owner_or_role_required(resource_type: type,
+                           resource_id_arg_name: str,
+                           *role_names: str) -> Callable:
     """Decorator for functions requiring either owner or role-based access.
-    This decorator checks if the current user is either the owner of the resource or has one of the specified roles.
+    This decorator checks if the current user is either the owner of the
+    resource or has one of the specified roles.
 
     Args:
-        resource_type (type): Description of the resource type (e.g., models.Character)
-        resource_id_arg_name (str): Name of the resource ID in the request view arguments (e.g., "character_id")
-        role_names (str): Names of the roles to check for (e.g., "admin", "operator")
+        resource_type (type): Description of the resource type
+                              (e.g., models.Character)
+        resource_id_arg_name (str): Name of the resource ID in the request view
+                                    arguments (e.g., "character_id")
+        role_names (str): Names of the roles to check for (e.g., "admin",
+                          "operator")
     """
     def inner_decorator(fn: Callable):
         @wraps(fn)
@@ -83,7 +93,8 @@ def role_required(*role_names: str) -> Callable:
     This decorator checks if the current user has one of the specified roles.
 
     Args:
-        role_names (str): Names of the roles to check for (e.g., "admin", "operator")
+        role_names (str): Names of the roles to check for (e.g., "admin",
+                          "operator")
     """
     def inner_decorator(fn: Callable) -> Callable:
         @wraps(fn)

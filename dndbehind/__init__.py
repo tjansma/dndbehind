@@ -15,7 +15,8 @@ def create_app(config_class: Config = Config) -> Flask:
     """Create a new Flask application.
 
     Args:
-        config_class (Config, optional): The configuration class to use. Defaults to Config.
+        config_class (Config, optional): The configuration class to use.
+                                         Defaults to Config.
 
     Returns:
         Flask: the new Flask application
