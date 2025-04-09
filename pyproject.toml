@@ -6,6 +6,13 @@ dependencies = [
     "flask",
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-flask",
+]
+
 [build-system]
 requires = ["flit_core<4"]
 build-backend = "flit_core.buildapi"
@@ -15,4 +22,4 @@ testpaths = ["tests"]
 
 [tool.coverage.run]
 branch = true
-source = ["flaskr"]
+source = ["dndbehind"]

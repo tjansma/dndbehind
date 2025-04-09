@@ -150,32 +150,31 @@ def login_user() -> Response:
             If the username or password is incorrect, an appropriate message 
             and status code 401 will be returned.
     """
-    
     username = request.json.get("username", None)
     password = request.json.get("password", None)
 
     if not username or not password:
         return jsonify(msg="Username and password are required."), 400
-    
+
     try:
         user = models.User.from_username(username)
     except LookupError:
         return jsonify(msg="Invalid username or password."), 401
-    
+
     if not user.check_password(password):
         return jsonify(msg="Invalid username or password."), 401
-    
+
     if user.disabled:
         return jsonify(msg="User account is disabled."), 401
 
     user.update_login_time()
 
-    user_roles = [ role.name for role in user.roles ]
+    user_roles = [role.name for role in user.roles]
 
     token = create_access_token(
         identity=str(user.id),
-        additional_claims={ "roles": user_roles })
-    return jsonify(token=token)
+        additional_claims={"roles": user_roles})
+    return jsonify(access_token=token)
 
 
 @bp.route("/whoami", methods=["GET"])
