@@ -23,7 +23,7 @@ before_script:
 
 stages:
   - test
-  # - build
+  - build
   # - deploy
 
 test:
@@ -42,14 +42,17 @@ test:
         coverage_format: cobertura
         path: coverage.xml
 
-# build:
-#   stage: build
-#   script:
-#     - pip install build
-#     - python -m build
-#   artifacts:
-#     paths:
-#       - dist/*.whl
+build:
+  image: docker:20.10.16
+  stage: build
+  services:
+    - docker:20.10.16-dind
+  variables:
+    IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+    - docker build -t $IMAGE_TAG docker/
+    - docker push $IMAGE_TAG
 
 # deploy:
 #   stage: deploy
