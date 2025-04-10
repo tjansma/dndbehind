@@ -46,11 +46,11 @@ build:
   image: docker:20.10.16
   stage: build
   services:
-    - docker:20.10.16-dind
+    - name: docker:20.10.16-dind
+      alias: docker
   variables:
     IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   script:
-    - unset DOCKER_HOST
     - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
     - docker build -t $IMAGE_TAG .
     - docker push $IMAGE_TAG
