@@ -2,8 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY dist/*.whl .
-RUN pip install *.whl
+COPY . ./
+RUN pip install .
+RUN pip install uvicorn
 
 EXPOSE 5000
 
