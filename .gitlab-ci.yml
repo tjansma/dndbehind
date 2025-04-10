@@ -43,11 +43,7 @@ test:
         path: coverage.xml
 
 build:
-  image: docker:20.10.16
   stage: build
-  services:
-    - name: docker:20.10.16-dind
-      alias: docker
   variables:
     IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   script:
