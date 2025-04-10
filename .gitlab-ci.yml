@@ -18,8 +18,8 @@ cache:
   paths:
     - .cache/pip
 
-before_script:
-  - python --version ; pip --version  # For debugging
+# before_script:
+#   - python --version ; pip --version  # For debugging
 
 stages:
   - test
