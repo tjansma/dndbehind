@@ -11,7 +11,8 @@ load_dotenv(os.path.join(basedir, ".env"))
 class Config:
     """Base configuration for the application."""
 
-    JWT_ACCESS_TOKEN_EXPIRES = os.environ.get("JWT_ACCESS_TOKEN_EXPIRES") or 3600
+    JWT_ACCESS_TOKEN_EXPIRES = \
+        os.environ.get("JWT_ACCESS_TOKEN_EXPIRES") or 3600
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY") or "NOTSECURE"
     SECRET_KEY = os.environ.get("SECRET_KEY") or "insecure"
     SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL") \

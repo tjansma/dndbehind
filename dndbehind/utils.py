@@ -22,7 +22,7 @@ def make_response_without_resource_state(message: str,
 
     Args:
         message (str): short message describing the status of the request.
-        status_code (int): HTTP status code indicating the result of the 
+        status_code (int): HTTP status code indicating the result of the
                            request.
 
     Returns:
@@ -38,14 +38,14 @@ def make_response_without_resource_state(message: str,
 def make_response_with_resource_state(message: str,
                                       status_code: int,
                                       resource_state: dict[str, str | int]
-                                     ) -> Response:
+                                      ) -> Response:
     """Create a JSON response with a message, status code, and resource state.
 
     Args:
         message (str): short message describing the status of the request.
         status_code (int): HTTP status code indicating the result of the
                            request.
-        resource_state (dict[str, str  |  int]): dictionary containing the 
+        resource_state (dict[str, str  |  int]): dictionary containing the
                                                  state of the resource.
 
     Returns:

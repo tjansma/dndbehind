@@ -6,7 +6,7 @@ from typing import Callable
 from flask import Response, jsonify, request
 from flask_jwt_extended import verify_jwt_in_request, current_user
 
-from ..models import Owned, User
+from ..models import User
 
 
 def _has_role(jwt_data: dict, role_name: str) -> bool:
@@ -42,13 +42,13 @@ def self_or_role_required(user_id_arg_name: str, *role_names: str) -> Callable:
             target_user = User.from_id(request.view_args[user_id_arg_name])
             if target_user == current_user:
                 return fn(*args, **kwargs)
-            
+
             for role_name in role_names:
                 if _has_role(jwt_data, role_name):
                     return fn(*args, **kwargs)
 
             return jsonify(msg="Access denied."), 403
-            
+
         return wrapper
     return inner_decorator
 
@@ -77,13 +77,13 @@ def owner_or_role_required(resource_type: type,
             resource = resource_type.query.get(resource_id)
             if resource.owner == current_user:
                 return fn(*args, **kwargs)
-            
+
             for role_name in role_names:
                 if _has_role(jwt_data, role_name):
                     return fn(*args, **kwargs)
 
             return jsonify(msg="Access denied."), 403
-            
+
         return wrapper
     return inner_decorator
 
@@ -104,7 +104,7 @@ def role_required(*role_names: str) -> Callable:
             for role_name in role_names:
                 if _has_role(jwt_data, role_name):
                     return fn(*args, **kwargs)
-            
-            return jsonify(msg="Access denied."), 403         
+
+            return jsonify(msg="Access denied."), 403
         return wrapper
     return inner_decorator

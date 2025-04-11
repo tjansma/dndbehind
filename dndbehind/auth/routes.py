@@ -25,7 +25,7 @@ def get_user(user_id: int) -> Response:
     try:
         target_user = models.User.from_id(user_id)
         return jsonify(target_user.as_dict())
-    except LookupError as lookup_error:
+    except LookupError:
         return jsonify(msg="Unknown user"), 404
 
 
@@ -36,9 +36,9 @@ def create_user() -> Response:
     Returns:
         tuple[str, int]: message and HTTP result code
 
-            On success, the message will be the new user ID and the status code 
+            On success, the message will be the new user ID and the status code
             will be 201.
-            If the email address is already registered, an appropriate message 
+            If the email address is already registered, an appropriate message
             and status code 409 will be returned.
             If any other error occurs, a generic error message and status code
             500 will be returned.
@@ -55,7 +55,7 @@ def create_user() -> Response:
         username=userdata["username"],
         email=userdata["email"],
     )
-    
+
     try:
         db.session.add(new_user)
         new_user.set_password(userdata["password"])
@@ -72,8 +72,8 @@ def create_user() -> Response:
             _external=True)
 
         return response
-    
-    except IntegrityError as integrity_error:
+
+    except IntegrityError:
         db.session.rollback()
         return make_response_without_resource_state(
             message="Unable to create user; duplicate email address?",
@@ -92,7 +92,7 @@ def update_user(user_id: int) -> Response:
         user_id (int): ID of the user to update.
 
     Returns:
-        Response: JSON response with status message of result.        
+        Response: JSON response with status message of result.
     """
     valid_field_set = {
         "username",
@@ -109,17 +109,17 @@ def update_user(user_id: int) -> Response:
     # If not, return an error message
     if target_user is None:
         return jsonify(msg="Unknown user"), 404
-    
+
     # Check if any valid fields are present in the request
     # If not, return an error message
     if not valid_field_set.intersection(updated_userdata.keys()):
         return jsonify(msg="No valid fields to update."), 400
-    
+
     # Check if any invalid fields are present in the request
     # If so, return an error message
     if set(updated_userdata.keys()).difference(valid_field_set):
         return jsonify(msg="Invalid fields in request."), 400
-    
+
     if "username" in updated_userdata:
         target_user.username = updated_userdata["username"]
     if "email" in updated_userdata:
@@ -143,11 +143,11 @@ def login_user() -> Response:
 
     Returns:
         Response: JSON response with user ID and status code<br>
-            On success, the response will contain the user ID and status code 
+            On success, the response will contain the user ID and status code
             200.<br>
-            If the username or password is missing, an appropriate message and 
+            If the username or password is missing, an appropriate message and
             status code 400 will be returned.<br>
-            If the username or password is incorrect, an appropriate message 
+            If the username or password is incorrect, an appropriate message
             and status code 401 will be returned.
     """
     username = request.json.get("username", None)
@@ -187,8 +187,9 @@ def whoami() -> Response:
     """
     try:
         return jsonify(logged_in_as=current_user.as_dict())
-    except LookupError as lookup_error:
+    except LookupError:
         return jsonify(msg="Unknown user."), 500
+
 
 @bp.route("/userrole", methods=["GET"])
 @role_required("admin")
@@ -202,9 +203,10 @@ def list_all_user_roles() -> Response:
     result = []
     for user in all_users:
         result.append(user.as_dict())
-        result[-1]["roles"] = [ role.as_dict() for role in user.roles ]
-    
+        result[-1]["roles"] = [role.as_dict() for role in user.roles]
+
     return jsonify(result)
+
 
 @bp.route("/userrole/<int:user_id>", methods=["GET"])
 @role_required("admin")
@@ -219,9 +221,10 @@ def list_specific_user_roles(user_id: int) -> Response:
     """
     user = models.User.from_id(user_id)
     result_dict = user.as_dict()
-    result_dict["roles"] = [ role.as_dict() for role in user.roles ]
+    result_dict["roles"] = [role.as_dict() for role in user.roles]
 
     return jsonify(result_dict)
+
 
 @bp.route("/userrole/<int:user_id>", methods=["PUT"])
 @role_required("admin")
@@ -243,19 +246,20 @@ def add_roles_to_user(user_id: int) -> Response:
     rolenames = request.json.get("roles", None)
     if rolenames is None:
         return jsonify(msg="List of roles missing"), 400
-    
+
     # db.session.begin()
     try:
         for rolename in rolenames:
             current_role = models.Role.from_rolename(rolename)
             if current_role not in target_user.roles:
                 target_user.roles.append(current_role)
-    except LookupError as lookup_error:
+    except LookupError:
         db.session.rollback()
         return jsonify(msg="Unknown role name."), 400
-    
+
     db.session.commit()
     return jsonify(msg="Roles assigned to user.")
+
 
 @bp.route("/userrole/<int:user_id>", methods=["DELETE"])
 @role_required("admin")
@@ -273,14 +277,14 @@ def delete_roles_from_user(user_id: int) -> Response:
         target_user = models.User.from_id(user_id)
     except LookupError:
         return jsonify(msg="Unknown user"), 404
-    
+
     try:
         rolenames = request.json.get("roles", None)
     except AttributeError:
         return jsonify(msg="Malformed request"), 400
     if rolenames is None:
         return jsonify(msg="List of roles missing"), 400
-    
+
     # db.session.begin()
     try:
         for rolename in rolenames:
@@ -294,6 +298,6 @@ def delete_roles_from_user(user_id: int) -> Response:
     except LookupError:
         db.session.rollback()
         return jsonify(msg="Unknown role"), 404
-    
+
     db.session.commit()
     return jsonify(msg="Roles removed from user.")

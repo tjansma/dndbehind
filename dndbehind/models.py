@@ -50,7 +50,7 @@ class User(UserMixin, db.Model):
     disabled: orm.Mapped[bool] = orm.mapped_column(
         sa.Boolean(),
         default=False)
-    
+
     characters: orm.Mapped[List["Character"]] = \
         orm.relationship(back_populates="owner")
     roles: orm.Mapped[List["Role"]] = \
@@ -100,7 +100,7 @@ class User(UserMixin, db.Model):
             bool: True if the user is disabled, False otherwise
         """
         return self.disabled
-    
+
     def set_disabled(self, disabled: bool) -> None:
         """Set the disabled status of the user.
 
@@ -126,18 +126,19 @@ class User(UserMixin, db.Model):
             user_id (int): User ID
 
         Raises:
-            LookupError: raised when user with specified ID doesn't exist in DB.
+            LookupError: raised when user with specified ID doesn't exist in
+                         DB.
 
         Returns:
             Self: constructed User object.
         """
         user = User.query.get(user_id)
-        
+
         if not user:
             raise LookupError(f"User with ID {user_id} not found.")
-        
+
         return user
-    
+
     @classmethod
     def from_username(cls, username: str) -> Self:
         """Construct User object from data retrieved from DB by username.
@@ -153,10 +154,10 @@ class User(UserMixin, db.Model):
             Self: constructed User object.
         """
         user = cls.query.filter(cls.username == username).first()
-        
+
         if not user:
             raise LookupError(f"User with username '{username}' not found.")
-        
+
         return user
 
 
@@ -193,15 +194,16 @@ class Role(db.Model):
 
         if not role:
             raise LookupError(f"Unknown role: {rolename}")
-        
+
         return role
-    
+
     def as_dict(self):
         return {
             "id": self.id,
             "name": self.name,
             "description": self.description
         }
+
 
 class CharacterDict(TypedDict):
     id: int
@@ -216,6 +218,7 @@ class CharacterDict(TypedDict):
     charisma: int
     owner_id: int
     background_id: int
+
 
 class Character(db.Model):
     """D&D 5E Character model."""
@@ -256,7 +259,7 @@ class Character(db.Model):
             str: string representation of the character object
         """
         return f"<Character ID {self.id} - {self.name}"
-    
+
     def as_dict(self) -> CharacterDict:
         return {
             "id": self.id,
@@ -272,12 +275,13 @@ class Character(db.Model):
             "owner_id": self.owner_id,
             "background_id": self.background_id
         }
-    
+
 
 class BackgroundDict(TypedDict):
     id: int
     name: str
     description: str
+
 
 class Background(db.Model):
     """D&D 5E Background model."""
@@ -298,7 +302,7 @@ class Background(db.Model):
             str: string representation of the background object
         """
         return f"<Background ID {self.id} - {self.name}"
-    
+
     def as_dict(self) -> BackgroundDict:
         return {
             "id": self.id,

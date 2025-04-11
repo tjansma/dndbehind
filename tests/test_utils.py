@@ -1,4 +1,3 @@
-import pytest
 from dndbehind.utils import required_keys_present, \
     make_response_without_resource_state
 

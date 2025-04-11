@@ -1,11 +1,11 @@
 """Routes for management of relatively static application data."""
 
 from flask import request, jsonify, Response
-from flask_jwt_extended import jwt_required
 
 from . import bp
 from .. import db, models
 from ..auth.rbac import role_required,  owner_or_role_required
+
 
 @bp.route("/background", methods=["POST"])
 @role_required("maintainer")
@@ -20,11 +20,11 @@ def create_background() -> str:
     """
     background_data = request.get_json()
     background_name = background_data.get("name", None)
-    background_desc = background_data.get("description", None   )
+    background_desc = background_data.get("description", None)
 
     if background_name is None or background_desc is None:
         return jsonify(msg="Background name and description required."), 400
-    
+
     try:
         new_background = models.Background(name=background_name,
                                            description=background_desc)
@@ -76,5 +76,5 @@ def get_character(character_id: int) -> Response:
                   character and not operator.
     """
     return jsonify(
-        { "character": models.Character.query.get(character_id).as_dict() }
+        {"character": models.Character.query.get(character_id).as_dict()}
     )
