@@ -37,4 +37,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude migrations/
     - name: Test with pytest
       run: |
-        pytest --cov=dndbehind --cov-report=xml:coverage.xml tests/
+        pytest --cov=dndbehind --cov-report=term-missing tests/
