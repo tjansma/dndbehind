@@ -1,0 +1,34 @@
+[project]
+name = "dndbehind"
+version = "0.0.1"
+description = "Manage your D&D characters."
+dependencies = [
+    "flask",
+    "python-dotenv",
+    "sqlalchemy",
+    "flask",
+    "flask-sqlalchemy",
+    "flask-migrate",
+    "flask-login",
+    "argon2-cffi",
+    "flask-jwt-extended",
+
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-flask",
+]
+
+[build-system]
+requires = ["flit_core<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["dndbehind"]
