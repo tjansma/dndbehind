@@ -1,5 +1,4 @@
 """Routes for user authentication and management."""
-
 from flask import request, jsonify, Response, url_for
 from flask_jwt_extended import create_access_token, jwt_required, current_user
 from sqlalchemy.exc import IntegrityError

@@ -1,5 +1,4 @@
 """Database models for the D&D Behind application."""
-
 from datetime import datetime, timezone
 from typing import Optional, List, TypedDict, Self, Protocol
 
@@ -109,7 +108,12 @@ class User(UserMixin, db.Model):
         """
         self.disabled = disabled
 
-    def as_dict(self):
+    def as_dict(self) -> UserDict:
+        """Convert the user object to a dictionary.
+
+        Returns:
+            UserDict: a dictionary representation of the user object
+        """
         return {
             "id": self.id,
             "username": self.username,

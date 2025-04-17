@@ -1,9 +1,11 @@
 """General utility functions for the DnD Behind project."""
+from typing import Any
 
 from flask import Response, make_response
 
 
-def required_keys_present(required_keys: set[str], data: dict) -> bool:
+def required_keys_present(required_keys: set[str],
+                          data: dict[str, Any]) -> bool:
     """Check if all required keys are present in the data dictionary.
 
     Args:

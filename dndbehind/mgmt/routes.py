@@ -9,14 +9,14 @@ from ..auth.rbac import role_required,  owner_or_role_required
 
 @bp.route("/background", methods=["POST"])
 @role_required("maintainer")
-def create_background() -> str:
+def create_background() -> Response:
     """Add a new D&D background.
 
     Raises:
         e: raised on DB error.
 
     Returns:
-        str: JSON document with background data
+        Response: JSON document with the new background data.
     """
     background_data = request.get_json()
     background_name = background_data.get("name", None)
@@ -37,11 +37,11 @@ def create_background() -> str:
 
 @bp.route("/background", methods=["GET"])
 @role_required("maintainer")
-def list_backgounds() -> str:
+def list_backgounds() -> Response:
     """Return list with all data for all backgrounds.
 
     Returns:
-        str: JSON document containing that list.
+        Response: JSON document with all background data.
     """
     backgrounds = models.Background.query.all()
     return jsonify([
@@ -51,14 +51,14 @@ def list_backgounds() -> str:
 
 @bp.route("/background/<int:background_id>", methods=["PUT"])
 @role_required("maintainer")
-def update_background(background_id: int) -> str:
+def update_background(background_id: int) -> Response:
     """Update a background.
 
     Args:
         background_id (int): ID of the background to update.
 
     Returns:
-        str: JSON document with updated background data.
+        Response: JSON document with the updated background data.
     """
     raise NotImplementedError("Not implemented yet.")
 
