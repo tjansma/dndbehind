@@ -1,5 +1,4 @@
 """Configuration file for the application."""
-
 import os
 
 from dotenv import load_dotenv
@@ -10,7 +9,7 @@ load_dotenv(os.path.join(basedir, ".env"))
 
 class Config:
     """Base configuration for the application."""
-
+    TESTING = False
     JWT_ACCESS_TOKEN_EXPIRES = \
         os.environ.get("JWT_ACCESS_TOKEN_EXPIRES") or 3600
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY") or "NOTSECURE"
@@ -21,7 +20,6 @@ class Config:
 
 class TestingConfig(Config):
     """Testing configuration."""
-
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     JWT_SECRET_KEY = "test-secret-key"

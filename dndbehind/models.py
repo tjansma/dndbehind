@@ -1,5 +1,4 @@
 """Database models for the D&D Behind application."""
-
 from datetime import datetime, timezone
 from typing import Optional, List, TypedDict, Self, Protocol
 
@@ -22,6 +21,7 @@ user_roles_table = sa.Table(
 
 
 class UserDict(TypedDict):
+    """TypedDict for User model."""
     id: Optional[int]
     username: str
     email: str
@@ -89,7 +89,7 @@ class User(UserMixin, db.Model):
             return False
 
     def update_login_time(self) -> None:
-        """Update the last logged in time to the current time."""
+        """Update the last logged-in time for the user."""
         self.last_logged_in = datetime.now(timezone.utc)
         db.session.commit()
 
@@ -109,7 +109,12 @@ class User(UserMixin, db.Model):
         """
         self.disabled = disabled
 
-    def as_dict(self):
+    def as_dict(self) -> UserDict:
+        """Convert the user object to a dictionary.
+
+        Returns:
+            UserDict: a dictionary representation of the user object
+        """
         return {
             "id": self.id,
             "username": self.username,
@@ -162,6 +167,7 @@ class User(UserMixin, db.Model):
 
 
 class Owned(Protocol):
+    """Protocol for objects that have an owner."""
     owner: User
 
 
@@ -198,6 +204,15 @@ class Role(db.Model):
         return role
 
     def as_dict(self):
+        """Convert the role object to a dictionary.
+        This method returns a dictionary representation of the role object,
+        including its ID, name, and description.
+        This is useful for serializing the role object for JSON responses or
+        other data interchange formats.
+
+        Returns:
+            _type_: dictionary representation of the role object
+        """
         return {
             "id": self.id,
             "name": self.name,
@@ -206,6 +221,7 @@ class Role(db.Model):
 
 
 class CharacterDict(TypedDict):
+    """TypedDict for Character model."""
     id: int
     name: str
     description: str
@@ -261,6 +277,15 @@ class Character(db.Model):
         return f"<Character ID {self.id} - {self.name}"
 
     def as_dict(self) -> CharacterDict:
+        """Convert the character object to a dictionary.
+        This method returns a dictionary representation of the character
+        object, including its ID, name, description, backstory, attributes, and
+        owner ID. This is useful for serializing the character object for JSON
+        responses or other data interchange formats.
+
+        Returns:
+            CharacterDict: dictionary representation of the character object
+        """
         return {
             "id": self.id,
             "name": self.name,
@@ -278,6 +303,7 @@ class Character(db.Model):
 
 
 class BackgroundDict(TypedDict):
+    """TypedDict for Background model."""
     id: int
     name: str
     description: str
@@ -304,6 +330,15 @@ class Background(db.Model):
         return f"<Background ID {self.id} - {self.name}"
 
     def as_dict(self) -> BackgroundDict:
+        """Convert the background object to a dictionary.
+        This method returns a dictionary representation of the background
+        object, including its ID, name, and description. This is useful for
+        serializing the background object for JSON responses or other data
+        interchange formats.
+
+        Returns:
+            BackgroundDict: dictionary representation of the background object
+        """
         return {
             "id": self.id,
             "name": self.name,

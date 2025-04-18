@@ -1,0 +1,16 @@
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.11.12-final-0 _______________
+Name                          Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------
+dndbehind/__init__.py            22      1      0      0    95%   34
+dndbehind/auth/__init__.py        4      0      0      0   100%
+dndbehind/auth/callbacks.py       6      0      0      0   100%
+dndbehind/auth/rbac.py           47     23     16      0    38%   23, 40-50, 74-85, 102-108
+dndbehind/auth/routes.py        142     96     36      2    28%   25-29, 46-78, 97-135, 157, 161-162, 168, 190-191, 202-208, 222-226, 241-261, 276-303
+dndbehind/mgmt/__init__.py        3      0      0      0   100%
+dndbehind/mgmt/routes.py         32     16      2      0    47%   21-35, 46-47, 63, 78
+dndbehind/models.py             119     14      6      1    85%   65, 102, 110, 135-140, 159, 193-198, 261, 304
+dndbehind/utils.py                9      2      0      0    78%   54-59
+-------------------------------------------------------------------------
+TOTAL                           384    152     60      3    53%
+======================== 19 passed, 1 warning in 14.60s ========================
