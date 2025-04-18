@@ -1,7 +1,7 @@
 from typing import Any
 
 from .. import jwt
-from ..models import User
+from ..models import User, db
 
 
 @jwt.user_lookup_loader
@@ -22,4 +22,4 @@ def user_lookup_callback(_jwt_header: dict[str, Any],
         User | None: The user object if found, or None if not found.
     """
     identity = jwt_data["sub"]
-    return User.query.get(identity)
+    return db.session.get(User, identity)
