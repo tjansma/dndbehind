@@ -37,6 +37,15 @@ def test_user(db_session) -> User:
 
 
 @pytest.fixture
+def test_user_credentials(db_session):
+    # _ = test_user(db_session)
+    return {
+        'username': 'testuser',
+        'password': 'password123'
+    }
+
+
+@pytest.fixture
 def admin_role(db_session):
     role = Role(name='admin', description='Administrator role')
     db_session.add(role)
