@@ -1,8 +1,5 @@
 def test_login_success(client, test_user):
-    response = client.post('/auth/login', json={
-        'username': 'testuser',
-        'password': 'password123'
-    })
+    response = client.post('/auth/login', json=test_user.as_dict())
     assert response.status_code == 200
     assert 'access_token' in response.json
 

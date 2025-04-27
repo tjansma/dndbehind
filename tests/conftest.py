@@ -1,6 +1,7 @@
 from flask import Flask
 from flask.testing import FlaskClient
 import pytest
+
 from dndbehind import create_app, db
 from dndbehind.models import User, Role, Background
 from config import TestingConfig
