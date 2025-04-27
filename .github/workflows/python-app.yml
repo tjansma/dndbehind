@@ -38,7 +38,7 @@ jobs:
       run: |
         pytest --cov=dndbehind --cov-report=html:doc/coverage tests/
     - name: Archive code coverage results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: code-coverage-report
         path: doc/coverage/
