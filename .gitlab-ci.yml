@@ -15,6 +15,7 @@ cache:
 stages:
   - lint
   - unittest
+  - securitytest
   # - build
   # - deploy
 
@@ -43,6 +44,11 @@ unittest:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+
+sast:
+  stage: securitytest
+include:
+- template: Security/SAST.gitlab-ci.yml
 
 # build:
 #   stage: build
