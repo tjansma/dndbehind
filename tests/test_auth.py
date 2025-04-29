@@ -1,3 +1,6 @@
+import argon2
+import pytest
+
 def test_login_success(client, test_user, test_user_credentials):
     response = client.post('/auth/login', json=test_user_credentials)
     assert response.status_code == 200
@@ -29,3 +32,11 @@ def test_protected_route_with_token(client, test_user):
     headers = {'Authorization': f'Bearer {token}'}
     response = client.get('/auth/whoami', headers=headers)
     assert response.status_code == 200
+
+
+def test_password_is_hashed(test_user):
+    # Check if the password is hashed
+    try:
+        _ = argon2.extract_parameters(test_user.password_hash)
+    except argon2.exceptions.InvalidHashError:
+        pytest.fail("Password hash is invalid.")
