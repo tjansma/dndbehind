@@ -12,7 +12,9 @@ dependencies = [
     "flask-login",
     "argon2-cffi",
     "flask-jwt-extended",
-
+    "marshmallow",
+    "flask-marshmallow",
+    "marshmallow-sqlalchemy",
 ]
 
 [project.optional-dependencies]
