@@ -4,11 +4,13 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
 
 from config import Config
 
 db = SQLAlchemy()
 migrate = Migrate()
+ma = Marshmallow()
 jwt = JWTManager()
 
 
@@ -25,7 +27,9 @@ def create_app(config_class: Config = Config) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Order matters, SQLAlchemy must be initialized before Marshmallow
     db.init_app(app)
+    ma.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
 

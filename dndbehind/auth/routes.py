@@ -1,10 +1,11 @@
 """Routes for user authentication and management."""
 from flask import request, jsonify, Response, url_for
 from flask_jwt_extended import create_access_token, jwt_required, current_user
+from marshmallow import ValidationError
 from sqlalchemy.exc import IntegrityError
 
 from . import bp
-from .. import db, models
+from .. import db, models, schemas
 from .rbac import role_required, self_or_role_required
 from ..utils import make_standardized_response, \
     required_keys_present, make_standardized_response
@@ -42,29 +43,24 @@ def create_user() -> Response:
             If any other error occurs, a generic error message and status code
             500 will be returned.
     """
-    userdata = request.get_json()
-    required_keys = {"username", "email", "password"}
+    try:
+        new_user_dto: schemas.UserCreateDTO = \
+            schemas.UserCreateSchema().load(request.json)
+    except ValidationError as err:
+        return make_standardized_response(err.messages, 400)
 
-    if not required_keys_present(required_keys, userdata):
-        return make_standardized_response(
-            message="Missing required fields",
-            status_code=400
-        )
-
-    new_user = models.User(
-        username=userdata["username"],
-        email=userdata["email"],
-    )
+    new_user = models.User(username=new_user_dto.username,
+                           email=new_user_dto.email)
 
     try:
         db.session.add(new_user)
-        new_user.set_password(userdata["password"])
+        new_user.set_password(new_user_dto.password)
         db.session.commit()
 
         response = make_standardized_response(
             message="User created successfully.",
             status_code=201,
-            resource_state=new_user.as_dict()
+            resource_state=schemas.UserResponseSchema().dump(new_user)
         )
         response.headers["Location"] = url_for(
             'auth.get_user',
