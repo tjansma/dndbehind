@@ -6,8 +6,8 @@ from sqlalchemy.exc import IntegrityError
 from . import bp
 from .. import db, models
 from .rbac import role_required, self_or_role_required
-from ..utils import make_response_without_resource_state, \
-    required_keys_present, make_response_with_resource_state
+from ..utils import make_standardized_response, \
+    required_keys_present, make_standardized_response
 
 
 @bp.route("/user/<int:user_id>", methods=["GET"])
@@ -46,9 +46,10 @@ def create_user() -> Response:
     required_keys = {"username", "email", "password"}
 
     if not required_keys_present(required_keys, userdata):
-        return jsonify(
-                error="Bad request", message="Missing required fields."
-            ), 400
+        return make_standardized_response(
+            message="Missing required fields",
+            status_code=400
+        )
 
     new_user = models.User(
         username=userdata["username"],
@@ -60,7 +61,7 @@ def create_user() -> Response:
         new_user.set_password(userdata["password"])
         db.session.commit()
 
-        response = make_response_with_resource_state(
+        response = make_standardized_response(
             message="User created successfully.",
             status_code=201,
             resource_state=new_user.as_dict()
@@ -74,7 +75,7 @@ def create_user() -> Response:
 
     except IntegrityError:
         db.session.rollback()
-        return make_response_without_resource_state(
+        return make_standardized_response(
             message="Unable to create user; duplicate email address?",
             status_code=409)
 

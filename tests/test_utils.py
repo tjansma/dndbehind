@@ -1,5 +1,5 @@
 from dndbehind.utils import required_keys_present, \
-    make_response_without_resource_state
+    make_standardized_response
 
 
 def test_required_keys_present():
@@ -13,7 +13,7 @@ def test_required_keys_present():
 
 def test_make_response_without_resource_state(app):
     with app.app_context():
-        response = make_response_without_resource_state('Test message', 200)
+        response = make_standardized_response('Test message', 200)
         assert response.status_code == 200
         assert response.json['msg'] == 'Test message'
         assert response.json['status'] == 200
